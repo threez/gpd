@@ -1,0 +1,2 @@
+# gpd
+Ghostscript PDF Daemon
