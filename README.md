@@ -42,3 +42,33 @@ The following files will be produced:
 
 The 2-Clause BSD License.
 
+## Configuration and Setup
+
+The token can be used to secure the connection between the minio server and the
+gpd. Only events that are done via the token URL are allowed and processed.
+
+### 1. Enable webhooks in minio
+
+The URL needs to be the URL of the gpd server. Example:
+
+    "webhook": {
+        "1": {
+                "enable": true,
+                "endpoint": "https://<host>:3443/gpd/events?token=<SOME-RANDOM-TOKEN>"
+        }
+
+### 2. Create bucket and enable events on the bucket via minio command
+
+    $ minio-client mb <server>/<bucket> --region=<region>
+    $ minio-client events add <server>/<bucket> arn:minio:sqs:<region>:1:webhook --suffix .pdf
+
+For example:
+
+    $ minio-client mb s3/test --region=<us-east-1>
+    $ minio-client events add s3/test arn:minio:sqs:us-east-1:1:webhook --suffix .pdf
+
+The notifications can also be restricted to a certain prefix using `--prefix`.
+
+### 3. Start the gpd service
+
+    $ ./gpd -address :3443 -token <SOME-RANDOM-TOKEN> -cert cert.pem -key key.pem"
