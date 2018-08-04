@@ -40,4 +40,5 @@ The following files will be produced:
 
 ## License
 
-Due to the license conditions of ghostscript the GNU Affero GPL is applied.
+The 2-Clause BSD License.
+
