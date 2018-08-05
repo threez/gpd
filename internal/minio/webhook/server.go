@@ -1,10 +1,12 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/threez/gpd/pkg/minio/webhook"
 )
@@ -84,8 +86,10 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("WebHook [%s] %s\n", event.EventName, event.Key)
 
-	// process event
-	err = s.Handler.ProcessEvent(r.Context(), &event)
+	// process event max 10 minutes (don't use request ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	defer cancel()
+	err = s.Handler.ProcessEvent(ctx, &event)
 	if err != nil {
 		w.WriteHeader(501)
 		fmt.Fprintf(w, "Failed to process event: %s", err)
