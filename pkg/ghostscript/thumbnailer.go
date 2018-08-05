@@ -28,8 +28,8 @@ func (c Config) NewThumbnailerContext(ctx context.Context, source io.Reader, dpi
 	dpiStr := fmt.Sprintf("-r%d", dpi)
 	args := []string{"-dPDFFitPage", dpiStr,
 		"-dMaxBitmap=500000000", "-dAlignToPixels=0", "-dGridFitTT=2",
-		"-sDEVICE=jpeg", "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		"-sDEVICE=pngalpha", tmpfile.Name()}
+		"-dTextAlphaBits=4", "-dGraphicsAlphaBits=4", "-sDEVICE=pngalpha",
+		tmpfile.Name()}
 
 	return c.NewPagerContext(ctx, args, gen)
 }

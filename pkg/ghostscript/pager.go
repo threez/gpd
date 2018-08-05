@@ -4,13 +4,13 @@ package ghostscript
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"io"
 	"os/exec"
 )
 
-const continueExp = ">>showpage, press <return> to continue<<"
-
+var continueExp = []byte(">>showpage, press <return> to continue<<\n")
 var continueExpLen = len(continueExp)
 
 // WriterGeneratorFunc function that generates a writer for each page
@@ -46,42 +46,57 @@ func (c Config) NewPagerContext(ctx context.Context, args []string, generateWrit
 	}
 
 	sob := bufio.NewReader(stdout)
-	var buf [4096]byte
 	i := 0
 	var w io.WriteCloser
 
 	for {
-		n, err := sob.Read(buf[:])
-		if n > 0 && n > continueExpLen {
-			if w == nil {
-				i++
-				w, err = generateWriter(ctx, i)
-				if err != nil {
-					return err
-				}
-			}
+		buf, err := sob.ReadSlice('\n')
+		n := len(buf)
 
-			if string(buf[n-continueExpLen-1:n-1]) == continueExp {
-				w.Write(buf[:n-continueExpLen-1])
-				err := w.Close()
-				if err != nil {
-					return err
-				}
+		if err == io.EOF && n == 0 {
+			break
+		}
 
-				// page to next page
-				_, err = stdin.Write([]byte{0x0A})
-				if err != nil {
-					return err
-				}
-
-				w = nil
-			} else {
-				w.Write(buf[:n])
+		// create new writer using generator function
+		if w == nil {
+			i++
+			w, err = generateWriter(ctx, i)
+			if err != nil {
+				return err
 			}
 		}
 
+		// Check if line is continue expression
+		if n >= continueExpLen && bytes.Compare(buf[n-continueExpLen:], continueExp) == 0 {
+			w.Write(buf[:n-continueExpLen])
+
+			err = w.Close()
+			if err != nil {
+				return err
+			}
+
+			// page to next page
+			_, err = stdin.Write([]byte{0x0A})
+			if err != nil {
+				return err
+			}
+
+			w = nil
+		} else {
+			// otherwise write the data into the current writer
+			w.Write(buf)
+		}
+
+		// check on read errors
 		if err == io.EOF {
 			break
+		}
+	}
+
+	if w != nil {
+		err = w.Close()
+		if err != nil {
+			return err
 		}
 	}
 
