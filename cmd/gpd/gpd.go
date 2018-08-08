@@ -42,7 +42,9 @@ func main() {
 	defer http.Close()
 
 	https := s.ListenAndServeTLS(secureAddress, cert, key)
-	defer https.Close()
+	if https != nil {
+		defer https.Close()
+	}
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
