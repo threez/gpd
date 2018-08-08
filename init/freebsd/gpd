@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# PROVIDE: gpd
+# REQUIRE: networking
+# KEYWORD:
+
+. /etc/rc.subr
+
+name=gpd
+rcvar=gpd_enable
+load_rc_config $name
+
+[ -z "$gpd_enable" ] && gpd_enable="no"
+[ -z "$gpd_address" ] && gpd_address=":3080"
+[ -z "$gpd_dpi" ] && gpd_dpi="70"
+[ -z "$gpd_endpoint" ] && gpd_endpoint="127.0.0.1:9090"
+[ -z "$gpd_access_key_id" ] && gpd_access_key_id="XXXXXX"
+[ -z "$gpd_secret_access_key" ] && gpd_secret_access_key="XXXXXXX"
+[ -z "$gpd_token" ] && gpd_token=`openssl rand -hex 16`
+
+gpd_path="/usr/local/sbin/gpd"
+gpd_args="-secret-access-key $gpd_secret_access_key \
+          -access-key-id $gpd_access_key_id \
+          -address $gpd_address \
+          -endpoint $gpd_endpoint \
+          -token $gpd_token \
+          -dpi $gpd_dpi"
+
+pidfile="/var/run/$name.pid"
+logfile="/var/log/$name.log"
+
+command="/usr/sbin/daemon"
+command_args="-S -t $name -u $name -r -P $pidfile -o $logfile $gpd_path $gpd_args"
+
+run_rc_command "$1"
