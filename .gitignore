@@ -16,3 +16,6 @@
 *.crt
 *.key
 *.pem
+
+# vendor folders
+vendor
