@@ -92,6 +92,7 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = s.Handler.ProcessEvent(ctx, &event)
 	if err != nil {
 		w.WriteHeader(501)
+		log.Printf("ERR Failed to process event: %s", err)
 		fmt.Fprintf(w, "Failed to process event: %s", err)
 		return
 	}
